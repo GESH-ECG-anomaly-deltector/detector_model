@@ -1,0 +1,183 @@
+define_8_superclasses()
+  8 superclasses based on Dr.Teimouri's suggestion are created.
+	hint:
+		 super_classes_log :
+			 -> superclasses are as bellow
+
+
+super-classes with their sub-classes
+
+
+
+-----------------
+0  Standard
+	SR,	Sinus Rhythm
+
+
+
+
+-----------------
+1  Bradyarrhythmia
+	1AVB,	1 degree atrioventricular block
+
+	2AVB,	2 degree atrioventricular block
+
+	2AVB1,	2 degree atrioventricular block(Type one)
+
+	2AVB2,	2 degree atrioventricular block(Type two)
+
+	3AVB,	3 degree atrioventricular block
+
+	AVB,	atrioventricular block
+
+	JEB,	junctional escape beat
+
+	PRIE,	PR interval extension
+
+	SB,	Sinus Bradycardia
+
+
+
+
+-----------------
+2  Ischemia and ST-T changes
+	MI,	myocardial infarction
+
+	MIBW,	myocardial infraction in back wall
+
+	MIFW,	Myocardial infgraction in the front wall
+
+	MILW,	Myocardial infraction in the lower wall
+
+	MISW,	Myocardial infraction in the side wall
+
+	STDD,	ST drop down
+
+	STE,	ST extension
+
+	STTC,	ST-T Change
+
+	STTU,	ST tilt up
+
+	TWC,	T wave Change
+
+	TWO,	T wave opposite
+
+	UW,	U wave
+
+
+
+
+-----------------
+3  Ventricular arrhythmia
+	VB,	ventricular bigeminy
+
+	VEB,	ventricular escape beat
+
+	VFW,	ventricular fusion wave
+
+	VPB,	ventricular premature beat
+
+	VET,	ventricular escape trigeminy
+
+
+
+
+-----------------
+4  Supraventricular arrhythmia
+	ABI,	atrial bigeminy
+
+	APB,	atrial premature beats
+
+	JPT,	junctional premature beat
+
+	AFIB,	Atrial Fibrillation
+
+	ST,	Sinus Tachycardia
+
+	AF,	Atrial Flutter
+
+	SA,	Sinus Irregularity
+
+	SVT,	Supraventricular Tachycardia
+
+	AT,	Atrial Tachycardia
+
+	AVNRT,	Atrioventricular  Node Reentrant Tachycardia
+
+	AVRT,	Atrioventricular Reentrant Tachycardia
+
+	SAAWR,	Sinus Atrium to Atrial Wandering Rhythm
+
+
+
+
+-----------------
+5  Bundle branch abnormalities
+	IDC,	Interior differences conduction
+
+	IVB,	Intraventricular block
+
+	LBBB,	left bundle branch block
+
+	LBBBB,	left back bundle branch block
+
+	LFBBB,	left front bundle branch block
+
+	LVH,	left ventricle hypertrophy
+
+	RBBB,	right bundle branch block
+
+	RVH,	right ventricle hypertrophy
+
+
+
+
+-----------------
+6  Abnormal parameters in ECG
+	ALS,	Axis left shift
+
+	AQW,	abnormal Q wave
+
+	ARS,	Axis right shift
+
+	LVQRSAL,	lower voltage QRS in all lead
+
+	LVQRSCL,	lower voltage QRS in chest lead
+
+	LVQRSLL,	lower voltage QRS in limb lead
+
+	QTIE,	QT interval extension
+
+	RAH,	right atrial hypertrophy
+
+
+
+
+-----------------
+7  Pre-excitation
+	VPE,	ventricular preexcitation
+
+	WPW,	WPW
+
+
+
+
+-----------------
+8  delete_all_of_them
+	CCR,	countercolockwise rotation
+
+	CR,	colockwise rotation
+
+	ERV,	Early repolarization of the ventricles
+
+	FQRS,	fQRS Wave
+
+	PWC,	P wave Change
+
+	WAVN,	Wandering in the atrioventricalualr node
+
+
+
+
+----------------------------------------------------------------
