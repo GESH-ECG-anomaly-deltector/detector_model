@@ -1,3 +1,6 @@
+## tested on chatgpt
+### tested and trained on a model.
+
 import math
 import torch
 import torch.nn as nn
@@ -10,7 +13,7 @@ class upper_MSEL(nn.Module):
     def __init__(self):
         super().__init__()
         
-        num_leads=12
+        num_leads=128   #CNN-block output
         patch_len1=20
         patch_len2=40
         stride=patch_len1
@@ -80,8 +83,8 @@ class lower_MSEL(nn.Module):
     
     def __init__(self):
         super().__init__()
-        
-        num_leads=12
+
+        num_leads=128   #CNN-block output
         patch_len1=5
         patch_len2=100
         stride=patch_len1
@@ -147,3 +150,5 @@ class lower_MSEL(nn.Module):
 
 
 
+#lower_out.shape:   torch.Size([5, 182, 256])
+#upper_out.shape:   torch.Size([5, 50, 256])
