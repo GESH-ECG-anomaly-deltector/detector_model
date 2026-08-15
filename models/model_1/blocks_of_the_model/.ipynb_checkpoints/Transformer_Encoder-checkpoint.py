@@ -1,3 +1,8 @@
+## checked by chatgpt
+
+
+
+
 import torch
 import torch.nn as nn
 import math
@@ -7,21 +12,22 @@ import math
 
 #mhsa = multi-head self attention
 class mhsa(nn.Module):
-    def __init__(self, d_model: int, num_heads: int):
+    def __init__(self, d_model: int, num_heads: int):  #d_model:input_length             num_heads: attention_blocks_count
         super().__init__()
 
-        self.d_modle=d_model
+        self.d_model=d_model
         self.num_heads=num_heads
         self.head_dim= d_model//num_heads
 
-        self.q_proj = nn.Linear(d_model, d_model)
-        self.v_proj = nn.Linear(d_model, d_model)
-        self.k_proj = nn.Linear(d_model, d_model)
+        self.q_proj   = nn.Linear(d_model, d_model)
+        self.v_proj   = nn.Linear(d_model, d_model)
+        self.k_proj   = nn.Linear(d_model, d_model)
         self.out_proj = nn.Linear(d_model, d_model)
 
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         batch_size, seq_len, _ = x.shape
+        #seq_len = number of tokens
         
         q=self.q_proj(x)
         k=self.k_proj(x)
@@ -64,7 +70,12 @@ class mlp(nn.Module):
 
 #Transformer Encoder Block
 class teb(nn.Module):
-    def __init__(self, d_model: int, num_heads: int, d_ff: int):  # d_ff=2048
+    def __init__(self, samples: int, attention_blocks_count: int):
+        #samples=256  attention_blocks_count=8
+        d_model=smaples        
+        num_heads=attention_blocks_count
+        d_ff=d_model*4
+        
         super().__init__()
 
         self.norm1=nn.LayerNorm(d_model)
@@ -86,5 +97,8 @@ class teb(nn.Module):
         teb_out=tmp + mlp_out
 
         return teb_out
+
+
+
 
         
