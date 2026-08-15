@@ -408,4 +408,5 @@ class load_dataset():
 
 
     def get_signals_and_labels(self):
+        self.signals = self.signals.transpose(0, 2, 1)
         return self.signals, self.labels
