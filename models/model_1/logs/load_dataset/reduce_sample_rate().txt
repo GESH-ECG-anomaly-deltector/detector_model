@@ -2,5 +2,5 @@ reduce_sample_rate()
   sample-rate is reduced from 500HZ to 100HZ.
 	hint:
 		 signals_shape=(batch_number, timesteps, features) as bellow :
-			 -> (30000, 1000, 12)
+			 -> (10, 1000, 12)
 ----------------------------------------------------------------
