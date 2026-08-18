@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Patch Embedding for ECG Signals — A Field Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+  :root{
+    --paper:#FCF8F3;
+    --grid:#EAB6B0;
+    --grid-major:#DE948C;
+    --ink:#181F1B;
+    --ink-soft:#4B5750;
+    --trace:#0B6E4F;
+    --trace-soft:#3F9174;
+    --lead:#C1440E;
+    --card:#FFFFFF;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 24px, var(--grid) 24px, var(--grid) 25px),
+      repeating-linear-gradient(90deg, transparent, transparent 24px, var(--grid) 24px, var(--grid) 25px),
+      repeating-linear-gradient(0deg, transparent, transparent 4.8px, rgba(234,182,176,0.35) 4.8px, rgba(234,182,176,0.35) 5px),
+      repeating-linear-gradient(90deg, transparent, transparent 4.8px, rgba(234,182,176,0.35) 4.8px, rgba(234,182,176,0.35) 5px),
+      var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.55;
+  }
+
+  .sheet{
+    max-width:780px;
+    margin:0 auto;
+    padding:56px 32px 80px;
+  }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--lead);
+    font-weight:600;
+    margin-bottom:10px;
+  }
+
+  h1{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:clamp(28px, 5vw, 42px);
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:0 0 8px;
+    line-height:1.12;
+  }
+
+  .subtitle{
+    font-size:17px;
+    color:var(--ink-soft);
+    max-width:56ch;
+    margin:0 0 32px;
+  }
+
+  .strip{
+    height:2px;
+    background:repeating-linear-gradient(90deg, var(--ink) 0 8px, transparent 8px 14px);
+    margin:28px 0;
+    opacity:0.35;
+  }
+
+  .hero-card{
+    background:var(--card);
+    border:1px solid rgba(0,0,0,0.08);
+    border-radius:4px;
+    padding:20px 18px 12px;
+    box-shadow:0 1px 0 rgba(0,0,0,0.03);
+    margin-bottom:36px;
+  }
+  .hero-card svg{width:100%; height:auto; display:block;}
+  .hero-caption{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    text-align:center;
+    letter-spacing:0.04em;
+    padding:10px 0 4px;
+  }
+
+  h2{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    font-weight:600;
+    color:var(--trace);
+    margin:0 0 4px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  h2::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--grid-major);
+  }
+
+  section{margin-bottom:34px;}
+
+  p{margin:10px 0;}
+
+  .lede{font-size:15.5px;}
+
+  .formula{
+    font-family:'IBM Plex Mono', monospace;
+    background:var(--card);
+    border-left:3px solid var(--trace);
+    padding:12px 16px;
+    font-size:13.5px;
+    margin:14px 0;
+    overflow-x:auto;
+    color:var(--ink);
+  }
+  .formula .comment{color:var(--ink-soft); display:block; margin-top:6px; font-size:12px;}
+
+  .steps{
+    list-style:none;
+    margin:0;
+    padding:0;
+    counter-reset:step;
+  }
+  .steps li{
+    counter-increment:step;
+    position:relative;
+    padding:14px 0 14px 52px;
+    border-bottom:1px dashed var(--grid-major);
+  }
+  .steps li:last-child{border-bottom:none;}
+  .steps li::before{
+    content: counter(step, decimal-leading-zero);
+    position:absolute;
+    left:0;
+    top:14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700;
+    font-size:13px;
+    color:var(--lead);
+    background:var(--card);
+    border:1px solid var(--lead);
+    width:32px;
+    height:32px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:2px;
+  }
+  .steps .step-title{
+    font-weight:600;
+    font-size:15px;
+    margin-bottom:3px;
+  }
+  .steps .step-body{
+    font-size:14px;
+    color:var(--ink-soft);
+  }
+  .steps code{
+    font-family:'IBM Plex Mono', monospace;
+    background:rgba(11,110,79,0.08);
+    color:var(--trace);
+    padding:1px 5px;
+    border-radius:2px;
+    font-size:12.5px;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+    background:var(--card);
+  }
+  th,td{
+    text-align:left;
+    padding:9px 10px;
+    border-bottom:1px solid var(--grid);
+    vertical-align:top;
+  }
+  th{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--trace);
+    border-bottom:2px solid var(--trace-soft);
+  }
+
+  .pitfalls{
+    display:grid;
+    gap:10px;
+  }
+  .pitfall{
+    background:var(--card);
+    border:1px solid rgba(0,0,0,0.07);
+    border-left:3px solid var(--lead);
+    padding:10px 14px;
+    font-size:13.5px;
+  }
+  .pitfall b{display:block; font-size:13.5px; margin-bottom:2px;}
+
+  .refs{
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .refs li{margin-bottom:6px;}
+
+  footer{
+    margin-top:44px;
+    padding-top:16px;
+    border-top:2px solid var(--ink);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+    letter-spacing:0.04em;
+  }
+
+  @media (max-width:520px){
+    .sheet{padding:36px 18px 60px;}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="eyebrow">Field Guide · Signal Processing for Transformers</div>
+  <h1>Patch Embedding for ECG Signals</h1>
+  <p class="subtitle">How to cut a continuous heartbeat into tokens a transformer can attend to — without losing the waveform's meaning.</p>
+
+  <div class="hero-card">
+    <svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg">
+      <!-- ECG waveform -->
+      <path d="M 10 150
+               L 55 150 L 63 140 L 71 150
+               L 82 150 L 90 80 L 100 210 L 110 130 L 120 150
+               L 145 150 L 153 138 L 161 150
+               L 260 150 L 268 140 L 276 150
+               L 287 150 L 295 80 L 305 210 L 315 130 L 325 150
+               L 350 150 L 358 138 L 366 150
+               L 465 150 L 473 140 L 481 150
+               L 492 150 L 500 80 L 510 210 L 520 130 L 530 150
+               L 555 150 L 563 138 L 571 150
+               L 670 150 L 678 140 L 686 150 L 710 150"
+            fill="none" stroke="#0B6E4F" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+
+      <!-- patch dividers -->
+      <g stroke="#C1440E" stroke-width="1.4" stroke-dasharray="4 3" opacity="0.75">
+        <line x1="130" y1="55" x2="130" y2="175"/>
+        <line x1="335" y1="55" x2="335" y2="175"/>
+        <line x1="540" y1="55" x2="540" y2="175"/>
+      </g>
+      <text x="70" y="45" font-family="IBM Plex Mono, monospace" font-size="10" fill="#C1440E">patch 1</text>
+      <text x="200" y="45" font-family="IBM Plex Mono, monospace" font-size="10" fill="#C1440E">patch 2</text>
+      <text x="405" y="45" font-family="IBM Plex Mono, monospace" font-size="10" fill="#C1440E">patch 3</text>
+      <text x="600" y="45" font-family="IBM Plex Mono, monospace" font-size="10" fill="#C1440E">patch 4</text>
+
+      <!-- arrows down -->
+      <g stroke="#181F1B" stroke-width="1.4">
+        <line x1="70" y1="180" x2="70" y2="205" marker-end="url(#arrow)"/>
+        <line x1="230" y1="180" x2="230" y2="205" marker-end="url(#arrow)"/>
+        <line x1="440" y1="180" x2="440" y2="205" marker-end="url(#arrow)"/>
+        <line x1="605" y1="180" x2="605" y2="205" marker-end="url(#arrow)"/>
+      </g>
+      <defs>
+        <marker id="arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 z" fill="#181F1B"/>
+        </marker>
+      </defs>
+
+      <!-- embedding vectors -->
+      <g font-family="IBM Plex Mono, monospace" font-size="9" fill="#FFFFFF">
+        <rect x="45" y="208" width="50" height="16" fill="#0B6E4F" rx="2"/>
+        <text x="52" y="219">z₁ ∈ Rᴰ</text>
+        <rect x="205" y="208" width="50" height="16" fill="#0B6E4F" rx="2"/>
+        <text x="212" y="219">z₂ ∈ Rᴰ</text>
+        <rect x="415" y="208" width="50" height="16" fill="#0B6E4F" rx="2"/>
+        <text x="422" y="219">z₃ ∈ Rᴰ</text>
+        <rect x="580" y="208" width="50" height="16" fill="#0B6E4F" rx="2"/>
+        <text x="587" y="219">z₄ ∈ Rᴰ</text>
+      </g>
+
+      <!-- bracket to transformer -->
+      <path d="M 95 234 L 95 244 L 630 244 L 630 234" fill="none" stroke="#181F1B" stroke-width="1.2"/>
+      <line x1="362" y1="244" x2="362" y2="252" stroke="#181F1B" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="230" y="256" width="264" height="0" opacity="0"/>
+    </svg>
+    <div class="hero-caption">signal → segmented patches → linear projection → token sequence [z₁ … z_N] + position → transformer encoder</div>
+  </div>
+
+  <section>
+    <h2>What patch embedding is</h2>
+    <p class="lede">Transformers consume a <em>sequence of tokens</em>, not a raw signal. Patch embedding is the step that turns a continuous ECG trace into that sequence: slice the waveform into short, fixed-length windows ("patches"), then linearly project each window into a fixed-size vector. The idea is borrowed directly from Vision Transformers, which patch an image into 16×16 pixel tiles — here the tile is a short slab of time instead of a slab of pixels.</p>
+    <p>The payoff is length reduction. A single 10-second, 500 Hz lead is 5,000 samples — far too long for self-attention's quadratic cost. A 25-sample patch turns that into 200 tokens; a 50-sample patch turns it into 100. Each token still carries a recognizable chunk of morphology (part of a QRS complex, a T wave), so the transformer attends over "beats and beat-fragments" rather than individual voltage samples.</p>
+  </section>
+
+  <section>
+    <h2>The core formula</h2>
+    <div class="formula">
+      x ∈ R^(C × T)&nbsp;&nbsp;// C leads, T time samples
+      <br>split x into N patches of length L along time&nbsp;&nbsp;(N = T / L, or via stride S for overlap)
+      <br>x_i ∈ R^(C × L)&nbsp;&nbsp;// the i-th raw patch
+      <br>z_i&nbsp;=&nbsp;W · flatten(x_i)&nbsp;+&nbsp;b&nbsp;&nbsp;// W ∈ R^(D × C·L), learnable linear projection
+      <br>z_i&nbsp;=&nbsp;z_i&nbsp;+&nbsp;p_i&nbsp;&nbsp;// add positional embedding for patch position i
+      <span class="comment">Token sequence fed to the encoder: [CLS, z₁, z₂, …, z_N] (CLS optional, task-dependent)</span>
+    </div>
+    <p>In practice the linear layer is often replaced with a small 1D convolution (kernel = stride = patch length), which is mathematically the same operation but easier to fuse with light local smoothing.</p>
+  </section>
+
+  <section>
+    <h2>Building the pipeline</h2>
+    <ul class="steps">
+      <li>
+        <div class="step-title">Preprocess the raw lead(s)</div>
+        <div class="step-body">Resample every record to one common rate (commonly 100–500 Hz), remove baseline wander and powerline noise, and normalize — either <code>z-score per lead</code> over the whole record or per-patch, which is more robust to amplitude drift across a long recording.</div>
+      </li>
+      <li>
+        <div class="step-title">Choose the patch length and stride</div>
+        <div class="step-body">Pick L in samples (e.g. <code>L = 0.1–0.2s</code> of signal) and a stride S. <code>S = L</code> gives non-overlapping patches (shorter sequence, cheaper); <code>S &lt; L</code> gives overlap, which softens the risk of a patch boundary landing mid-QRS at the cost of a longer sequence.</div>
+      </li>
+      <li>
+        <div class="step-title">Decide how leads are handled</div>
+        <div class="step-body">Two common patterns: <code>channel-independent</code> — patch each of the 12 leads separately and share the projection weights across leads (keeps sequence per-lead, lets attention mix leads later); or <code>channel-mixed</code> — a patch spans all C leads at once, so a single token already encodes cross-lead morphology at that instant.</div>
+      </li>
+      <li>
+        <div class="step-title">Linearly project each patch</div>
+        <div class="step-body">Flatten the patch and pass it through the learnable projection (linear layer or strided 1D conv) into the model's embedding dimension D — typically 64–256 for ECG-scale transformers, smaller than typical NLP/ViT dims.</div>
+      </li>
+      <li>
+        <div class="step-title">Inject position (and lead) information</div>
+        <div class="step-body">Add a learnable or sinusoidal positional embedding per time-index so the model knows patch order — attention alone is permutation-invariant and would otherwise treat the P wave and the T wave as interchangeable. If leads are patched independently, add a lead-identity embedding too.</div>
+      </li>
+      <li>
+        <div class="step-title">Prepend a [CLS] token (if classifying)</div>
+        <div class="step-body">For record-level tasks — arrhythmia classification, risk scoring — prepend a learnable [CLS] token whose final-layer output feeds the classification head. For per-timepoint tasks (segmentation, beat annotation) skip it and use every output token.</div>
+      </li>
+      <li>
+        <div class="step-title">Run the transformer encoder</div>
+        <div class="step-body">Standard multi-head self-attention + feed-forward blocks over the patch-token sequence. Attention here is doing the job a CNN's receptive field would do in a 1D-CNN baseline, but globally and adaptively from the first layer.</div>
+      </li>
+      <li>
+        <div class="step-title">Pretrain with masking (optional, recommended)</div>
+        <div class="step-body">Labeled ECG is scarce. Masked-patch pretraining — hide a subset of patches and train the model to reconstruct them, the ECG analogue of BEiT/MAE — is a common way to get useful representations before fine-tuning on a small labeled set.</div>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Design trade-offs at a glance</h2>
+    <table>
+      <tr><th>Choice</th><th>Smaller / shorter</th><th>Larger / longer</th></tr>
+      <tr><td>Patch length L</td><td>Finer morphology detail, more tokens, higher attention cost</td><td>Cheaper sequence, risk of blurring a QRS/P/T wave into one token</td></tr>
+      <tr><td>Stride vs. length</td><td>Non-overlapping: efficient, but a wave can be split across a boundary</td><td>Overlapping: softer boundaries, longer sequence, more compute</td></tr>
+      <tr><td>Lead handling</td><td>Channel-independent: reusable weights, attention learns cross-lead links</td><td>Channel-mixed: cross-lead pattern baked into the token itself, less flexible</td></tr>
+      <tr><td>Normalization</td><td>Per-patch: robust to slow amplitude drift</td><td>Per-record: preserves genuine amplitude differences (e.g. voltage criteria for hypertrophy)</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>Common pitfalls</h2>
+    <div class="pitfalls">
+      <div class="pitfall"><b>Splitting the QRS complex.</b> A poorly chosen patch boundary can cut a QRS spike across two tokens, weakening the very feature most diagnostic tasks depend on. Mitigate with overlap or a patch length safely larger than a typical QRS width (~80–120 ms).</div>
+      <div class="pitfall"><b>Treating ECG like an image.</b> A 12-lead ECG is not a 2D image — leads aren't spatially continuous the way pixel rows are. Patching across leads naively assumes an ordering/adjacency between leads that isn't physiologically real; channel-independent patching sidesteps this.</div>
+      <div class="pitfall"><b>Skipping normalization consistency.</b> Train/test amplitude mismatches (different acquisition devices, gain settings) are a common source of silent performance drops — normalize the same way at train and inference time.</div>
+      <div class="pitfall"><b>No positional signal.</b> Forgetting positional embeddings turns the patch sequence into an unordered set, discarding the temporal order that most rhythm-related diagnoses depend on.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Where this shows up in practice</h2>
+    <p class="lede" style="font-size:14px; color:var(--ink-soft);">Patch-based tokenization of physiological time series follows the same recipe as <b>ViT</b> (image patches) and <b>PatchTST</b> (time-series patches). ECG-specific transformers generally reuse this pattern — patch, project, position, attend — layering on masked-patch self-supervised pretraining to cope with limited labeled clinical data, an approach mirrored in ECG-focused work inspired by BEiT/MAE-style masked modeling.</p>
+  </section>
+
+  <footer>
+    <span>ECG × Transformers</span>
+    <span>Patch → Project → Position → Attend</span>
+  </footer>
+
+</div>
+</body>
+</html>
