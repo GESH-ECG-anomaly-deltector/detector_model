@@ -5,7 +5,7 @@ one_hot_encodding()
 			 -> signals: numpy array that includes 12-lead ECG signal.
 			 -> labels : one-hot encodded numpy array of diagnosed labels.
 			 -> The signals with this indices have no label, so they are romoved:
-				[]
+				[50]
 
 
 ----------------------------------------------------------------
