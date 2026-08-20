@@ -1,9 +1,8 @@
-## tested on chatgpt
-### tested and trained on a model.
-
-import math
-import torch
 import torch.nn as nn
+import torch
+import math
+
+
 
 
 
@@ -150,5 +149,9 @@ class lower_MSEL(nn.Module):
 
 
 
-#lower_out.shape:   torch.Size([5, 182, 256])
-#upper_out.shape:   torch.Size([5, 50, 256])
+# lower_out.shape:   torch.Size([5, 182, 256])
+# upper_out.shape:   torch.Size([5, 50, 256])
+
+### first:  batch_size
+### second: num_tokens
+### third:  token_dimention
