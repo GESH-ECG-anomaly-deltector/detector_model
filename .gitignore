@@ -2,3 +2,6 @@
 /a-large-scale-12-lead-electrocardiogram-database-for-arrhythmia-study-1.0.0/
 /models/model_1/dataset/
 /models/model_1/dataset_30k/
+/models/model_1/final_model/logs/
+/models/model_1/final_model/checkpoint_manager/
+/models/model_1/final_model/checkpoint_manager/
