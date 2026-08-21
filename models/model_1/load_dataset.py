@@ -20,6 +20,9 @@ import shutil
 class load_dataset():
     def __init__(self):
 
+        self.skip_list=[
+            "../../a-large-scale-12-lead-electrocardiogram-database-for-arrhythmia-study-1.0.0/WFDBRecords/01/019/JS01052"
+        ]
         self.log_flag=1
         print("Do you want to see the logs?")
         self.log_flag=int(input("1-Yes         0-No"))
@@ -111,6 +114,8 @@ class load_dataset():
                         break
             
                     directory5="/".join([directory3, name])
+                    if(directory5 in self.skip_list):
+                        continue
 
                     mat_file=".".join([directory5, "mat"])
                     hea_file=".".join([directory5, "hea"])
