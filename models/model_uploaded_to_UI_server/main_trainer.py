@@ -13,8 +13,13 @@ import torch.nn as nn
 import torch
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader, random_split
+from torchmetrics.classification import (
+    MultilabelF1Score, 
+    MultilabelRecall,
+    MultilabelAUROC,
+    MultilabelAccuracy)
 from torch.utils.tensorboard import SummaryWriter
-print("torch, nn, optim, TensorDataset, DataLoader, radom_split, and SummaryWriter are imported.\n")
+print("torch, nn, optim, TensorDataset, DataLoader, radom_split, metrics, and SummaryWriter are imported.\n")
 
 from load_dataset import *
 from CNN_blocks import *
@@ -32,7 +37,6 @@ print("device:", device)
 
 
 
-## load data
 if not "dataset" in os.listdir():
     ldob=load_dataset()
     ldob.load_dataset()
@@ -70,9 +74,14 @@ y=labels
 
 x_tv, x_test, y_tv, y_test = train_test_split(x, y, test_size=0.15, random_state=42) # tv means train and validation
 x_train, x_val, y_train, y_val = train_test_split(x_tv, y_tv, test_size=0.1765, random_state=42)
+np.save("x_test.npy", x_test)
+np.save("y_test.npy", y_test)
 
 mean=x_train.mean(axis=(0,2), keepdims=True)
 std = x_train.std(axis=(0,2), keepdims=True)
+
+np.save("train_mean.npy", mean)
+np.save("train_std.npy", std)
 
 x_train = (x_train -mean) / (std + 1e-8)
 x_val   = (x_val   -mean) / (std + 1e-8)
@@ -102,10 +111,11 @@ print("dataset splittion is done. train, validation and test DataLoaders are cre
 
 ## Model Definition
 class checkpoint_manager:
-    def __init__(self, save_dir, loss_name="val_loss"):
-        if(os.path.exists(save_dir)):
-            shutil.rmtree(save_dir)        
-        os.makedirs(save_dir)
+    def __init__(self, save_dir, loss_name="val_loss", save_mode=True):
+        if(save_mode):
+            if(os.path.exists(save_dir)):
+                shutil.rmtree(save_dir)        
+            os.makedirs(save_dir)
         self.save_dir=save_dir
         self.loss_name=loss_name
         self.best_loss=float("inf")
@@ -263,6 +273,36 @@ print("costum_loss, optimizer and scheduler are implemented.\n")
 
 
 
+## metrics
+num_labels=8
+f1_micro=MultilabelF1Score(num_labels=num_labels, average='micro', threshold=0.5)
+f1_macro=MultilabelF1Score(num_labels=num_labels, average='macro', threshold=0.5)
+f1_per_label=MultilabelF1Score(num_labels=num_labels, average=None, threshold=0.5)
+
+recall_micro = MultilabelRecall(num_labels=num_labels, average='micro', threshold=0.5)
+recall_macro = MultilabelRecall(num_labels=num_labels, average='macro', threshold=0.5)
+recall_per_label = MultilabelRecall(num_labels=num_labels, average=None, threshold=0.5)
+
+auroc_per_label = MultilabelAUROC(num_labels=num_labels, average=None)
+
+acc_per_label = MultilabelAccuracy(num_labels=num_labels, average=None, threshold=0.5)
+acc_micro = MultilabelAccuracy(num_labels=num_labels, average='micro', threshold=0.5)
+acc_macro = MultilabelAccuracy(num_labels=num_labels, average='macro', threshold=0.5)
+
+f1_micro = f1_micro.to(device)
+f1_macro = f1_macro.to(device)
+f1_per_label = f1_per_label.to(device)
+recall_micro = recall_micro.to(device)
+recall_macro = recall_macro.to(device)
+recall_per_label = recall_per_label.to(device)
+auroc_per_label = auroc_per_label.to(device)
+acc_per_label = acc_per_label.to(device)
+acc_micro = acc_micro.to(device)
+acc_macro = acc_macro.to(device)
+
+
+
+
 epochs=200
 if(os.path.exists("logs")):
     shutil.rmtree("logs")     
@@ -300,6 +340,20 @@ for epoch in range(epochs):
             cls1_u, cls1_l, cls2_u, cls2_l = tokens
             loss=custom_loss(output, y, cls1_u, cls1_l, cls2_u, cls2_l)
             val_loss += loss.item() * x.size(0)
+
+            probs = torch.sigmoid(output)   # do this explicitly, don't rely on auto-sigmoid
+
+            f1_micro.update(probs, y)
+            f1_macro.update(probs, y)
+            f1_per_label.update(probs, y)
+            recall_micro.update(probs, y)
+            recall_macro.update(probs, y)
+            recall_per_label.update(probs, y)
+            auroc_per_label.update(probs, y)
+            acc_per_label.update(probs, y)
+            acc_micro.update(probs, y)
+            acc_macro.update(probs, y)
+            
     val_loss /= len(val_loader.dataset)
             
     #summary writer:
@@ -309,9 +363,51 @@ for epoch in range(epochs):
     writer.add_scalar("Loss/train", train_loss, epoch)
     writer.add_scalar("Loss/val", val_loss, epoch)
     writer.add_scalar("LR", current_lr, epoch)
-                
+
+    f1_micro_val = f1_micro.compute().item()
+    f1_macro_val = f1_macro.compute().item()
+    f1_per_label_val = f1_per_label.compute()          # tensor of shape [num_labels]
+    recall_micro_val = recall_micro.compute().item()
+    recall_macro_val = recall_macro.compute().item()
+    recall_per_label_val = recall_per_label.compute()
+    auroc_per_label_val = auroc_per_label.compute()
+    acc_per_label_val = acc_per_label.compute()
+    acc_micro_val = acc_micro.compute().item()
+    acc_macro_val = acc_macro.compute().item()
+    # log scalars
+    writer.add_scalar("F1/micro", f1_micro_val, epoch)
+    writer.add_scalar("F1/macro", f1_macro_val, epoch)
+    writer.add_scalar("Recall/micro", recall_micro_val, epoch)
+    writer.add_scalar("Recall/macro", recall_macro_val, epoch)
+    writer.add_scalar("Acc/micro", acc_micro_val, epoch)
+    writer.add_scalar("Acc/macro", acc_macro_val, epoch)
+    # log per-label tensors, one scalar per label
+    for i in range(num_labels):
+        writer.add_scalar(f"F1_per_label/label_{i}", f1_per_label_val[i].item(), epoch)
+        writer.add_scalar(f"Recall_per_label/label_{i}", recall_per_label_val[i].item(), epoch)
+        writer.add_scalar(f"AUROC_per_label/label_{i}", auroc_per_label_val[i].item(), epoch)
+        writer.add_scalar(f"Acc_per_label/label_{i}", acc_per_label_val[i].item(), epoch)
+    # reset for next epoch — otherwise state accumulates across epochs!
+    for m in [f1_micro, f1_macro, f1_per_label, recall_micro, recall_macro,
+              recall_per_label, auroc_per_label, acc_per_label, acc_micro, acc_macro]:
+        m.reset()
+
+        
     #checkpoint saving:
-    ckpt_manager.save(model, optimizer, epoch, val_loss, scheduler=scheduler, extra=None)
+    metrics_extra = {
+        "f1_micro": f1_micro_val,
+        "f1_macro": f1_macro_val,
+        "f1_per_label": f1_per_label_val,#.cpu(),
+        "recall_micro": recall_micro_val,
+        "recall_macro": recall_macro_val,
+        "recall_per_label": recall_per_label_val,#.cpu(),
+        "auroc_per_label": auroc_per_label_val,#.cpu(),
+        "acc_per_label": acc_per_label_val,#.cpu(),
+        "acc_micro": acc_micro_val,
+        "acc_macro": acc_macro_val,
+    }
+    ckpt_manager.save(model, optimizer, epoch, val_loss, scheduler=scheduler, extra=metrics_extra)
+
 
     #early stopping:
     early_stopper.step(val_loss)
@@ -329,3 +425,38 @@ writer.close()
 
 
 
+print("\n\n*** *** *** *** *** ***")
+print("test evaluation:")
+x_test=np.load("x_test.npy")
+y_test=np.load("y_test.npy")
+
+
+mean=np.load("train_mean.npy")
+std= np.load("train_std.npy")
+
+x_test  = (x_test  -mean) / (std + 1e-8)
+x_test  = torch.tensor(x_test,  dtype=torch.float)
+
+y_test  = torch.tensor(y_test,  dtype=torch.long)
+interface_model=Classifier().to(device)
+
+checkpoint = torch.load(
+    "checkpoint_manager/best_checkpoint.pt",
+    map_location=device
+)
+
+interface_model.load_state_dict(checkpoint["model_state_dict"])
+
+interface_model.eval()
+
+print("Best checkpoint loaded.")
+print("Best checkpoint epoch:", checkpoint["epoch"])
+print("Best validation loss:", checkpoint["custom_paper's_loss"], "\n")
+
+
+with torch.no_grad():
+    output = interface_model(x_test)
+y_test_pred=torch.sigmoid(output[0])
+#print(y_test_pred)
+print("f1_micro:\t", f1_micro(y_test_pred, y_test))
+print("f1_per_label:\t", f1_per_label(y_test_pred, y_test))
