@@ -163,7 +163,7 @@ print("checkpoint_manager() is defined.\n")
 
 
 class early_stopping:
-    def __init__(self, patience=10):
+    def __init__(self, patience=100):
         self.patience=patience
         self.counter=0
         self.best_loss=float("inf")
@@ -426,37 +426,4 @@ writer.close()
 
 
 print("\n\n*** *** *** *** *** ***")
-print("test evaluation:")
-x_test=np.load("x_test.npy")
-y_test=np.load("y_test.npy")
-
-
-mean=np.load("train_mean.npy")
-std= np.load("train_std.npy")
-
-x_test  = (x_test  -mean) / (std + 1e-8)
-x_test  = torch.tensor(x_test,  dtype=torch.float)
-
-y_test  = torch.tensor(y_test,  dtype=torch.long)
-interface_model=Classifier().to(device)
-
-checkpoint = torch.load(
-    "checkpoint_manager/best_checkpoint.pt",
-    map_location=device
-)
-
-interface_model.load_state_dict(checkpoint["model_state_dict"])
-
-interface_model.eval()
-
-print("Best checkpoint loaded.")
-print("Best checkpoint epoch:", checkpoint["epoch"])
-print("Best validation loss:", checkpoint["custom_paper's_loss"], "\n")
-
-
-with torch.no_grad():
-    output = interface_model(x_test)
-y_test_pred=torch.sigmoid(output[0])
-#print(y_test_pred)
-print("f1_micro:\t", f1_micro(y_test_pred, y_test))
-print("f1_per_label:\t", f1_per_label(y_test_pred, y_test))
+print("end of training.\n)
