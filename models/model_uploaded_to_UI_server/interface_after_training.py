@@ -49,6 +49,9 @@ x_test  = torch.tensor(x_test,  dtype=torch.float)
 
 y_test  = torch.tensor(y_test,  dtype=torch.long)
 
+test_dataset  = TensorDataset(x_test, y_test)  
+test_loader  = DataLoader(test_dataset,  batch_size=64, shuffle=False)  
+
 
 
 
@@ -68,10 +71,12 @@ class Classifier(nn.Module):
         
         self.network=nn.Sequential(
             nn.Linear(512, 100),
-            nn.ReLU(),
+            nn.ReLU(), 
+            nn.Dropout(0.3),
             
             nn.Linear(100, 80),
             nn.ReLU(),
+            nn.Dropout(0.3),
             
             nn.Linear(80, 8)
         )
@@ -152,8 +157,13 @@ print("Best checkpoint epoch:", checkpoint["epoch"])
 print("Best validation loss:", checkpoint["custom_paper's_loss"], "\n")
 
 
+outputs=[]
 with torch.no_grad():
-    output = model(x_test)
+    for x, y in test_loader:
+        outputs.append(model(x.to(device))[0])
+output=(torch.cat(outputs), None)
+
+
 y_test_pred=torch.sigmoid(output[0])
 #print(y_test_pred)
 print("f1_micro:        \t", f1_micro(y_test_pred, y_test))

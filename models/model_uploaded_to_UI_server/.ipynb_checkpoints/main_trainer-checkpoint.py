@@ -200,10 +200,12 @@ class Classifier(nn.Module):
         
         self.network=nn.Sequential(
             nn.Linear(512, 100),
-            nn.ReLU(),
+            nn.ReLU(), 
+            nn.Dropout(0.3),
             
             nn.Linear(100, 80),
             nn.ReLU(),
+            nn.Dropout(0.3),
             
             nn.Linear(80, 8)
         )
@@ -227,7 +229,6 @@ class Classifier(nn.Module):
 
 
 print("classifier() is defined.\n")
-
 
 
 
@@ -308,7 +309,7 @@ if(os.path.exists("logs")):
     shutil.rmtree("logs")     
 writer=SummaryWriter(log_dir="logs")
 ckpt_manager=checkpoint_manager(save_dir="checkpoint_manager", loss_name="custom_paper's_loss")
-early_stopper=early_stopping(patience=10)
+early_stopper=early_stopping(patience=100)
 
 for epoch in range(epochs):
     model.train()
@@ -426,4 +427,4 @@ writer.close()
 
 
 print("\n\n*** *** *** *** *** ***")
-print("end of training.\n)
+print("end of training.\n")
