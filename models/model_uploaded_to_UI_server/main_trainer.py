@@ -201,11 +201,9 @@ class Classifier(nn.Module):
         self.network=nn.Sequential(
             nn.Linear(512, 100),
             nn.ReLU(), 
-            nn.Dropout(0.3),
             
             nn.Linear(100, 80),
             nn.ReLU(),
-            nn.Dropout(0.3),
             
             nn.Linear(80, 8)
         )
