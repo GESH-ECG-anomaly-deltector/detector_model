@@ -248,8 +248,8 @@ def r2_loss(y_pred, y_true, eps=1e-8):
 def custom_loss(output, y_batch, cls1_u, cls1_l, cls2_u, cls2_l):
     alpha = 0.2  #defined by the paper
 
-    bce_loss=nn.BCEWithLogitsLoss()
-    first_loss=bce_loss(output, y_batch.float())
+    bce_loss=nn.BCEWithLogitsLoss() # this function will apply sigmoid() itself, se we use torch.logit()  to make inverse of sigmoid.
+    first_loss=bce_loss(torch.logit(output), y_batch.float())
     second_loss=( r2_loss(cls2_u, cls2_l) / r2_loss(cls1_u, cls1_l) )
     total_loss = first_loss + (alpha*second_loss)
     
@@ -306,9 +306,9 @@ acc_macro = acc_macro.to(device)
 
 
 epochs=200
-if(os.path.exists("logs")):
-    shutil.rmtree("logs")     
-writer=SummaryWriter(log_dir="logs")
+if(os.path.exists("training_logs")):
+    shutil.rmtree("training_logs")     
+writer=SummaryWriter(log_dir="training_logs")
 ckpt_manager=checkpoint_manager(save_dir="checkpoint_manager", loss_name="custom_paper's_loss")
 early_stopper=early_stopping(patience=100)
 
