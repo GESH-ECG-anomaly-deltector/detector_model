@@ -224,8 +224,9 @@ class Classifier(nn.Module):
         lower_cls1, lower_cls2 =  self.lower_TS_block(lower_MSEL_out)
         
         net_in    =  torch.cat([lower_cls2, upper_cls2], dim=1)
+        classification_output  =  torch.sigmoid( self.network(net_in) )
         
-        return self.network( net_in ), [upper_cls1, lower_cls1, upper_cls2, lower_cls2]
+        return classification_output, [upper_cls1, lower_cls1, upper_cls2, lower_cls2]
 
 
 print("classifier() is defined.\n")

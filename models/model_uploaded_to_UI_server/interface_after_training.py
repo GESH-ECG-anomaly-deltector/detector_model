@@ -164,7 +164,7 @@ with torch.no_grad():
 output=(torch.cat(outputs), None)
 
 
-y_test_pred=torch.sigmoid(output[0])
+y_test_pred=output[0]
 #print(y_test_pred)
 print("f1_micro:        \t", f1_micro(y_test_pred, y_test))
 print("f1_per_label:    \t", f1_per_label(y_test_pred, y_test))
