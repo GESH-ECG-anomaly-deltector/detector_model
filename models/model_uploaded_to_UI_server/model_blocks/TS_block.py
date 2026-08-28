@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 import math
-from Transformer_Encoder import *
+from model_blocks.Transformer_Encoder import *
 
 
 

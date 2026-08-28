@@ -9,6 +9,9 @@ import neurokit2 as nk
 import csv
 import shutil
 
+from sklearn.model_selection import train_test_split
+import torch
+from torch.utils.data import TensorDataset, DataLoader, random_split
 
 
 
@@ -27,11 +30,11 @@ class load_dataset():
         print("Do you want to see the logs?")
         self.log_flag=int(input("1-Yes         0-No"))
 
-        self.log_path="".join(["logs/", "load_dataset"])
+        self.log_path="".join(["dataset_logs/", "load_dataset"])
         ls_list=os.listdir()
-        if "logs" in ls_list:
-            shutil.rmtree("logs")
-        os.mkdir("logs")
+        if "dataset_logs" in ls_list:
+            shutil.rmtree("dataset_logs")
+        os.mkdir("dataset_logs")
         os.mkdir(self.log_path)
         print("\n\n\n\n")
 
@@ -350,7 +353,7 @@ class load_dataset():
 
 
 
-    def one_hot_encodding(self): 
+    def one_hot_encodding(self, remove_outliers=False): 
         tmp_final_labels=[]
  
         for label in self.labels:
@@ -368,7 +371,7 @@ class load_dataset():
                 for i in range(len(tmp_labels)):
                     if i!=8  and  tmp_labels[i]==1:
                         flag=1
-                        break;
+                        break
             if(flag==0):
                 tmp_labels[0]=1
             del tmp_labels[8]
@@ -378,6 +381,11 @@ class load_dataset():
         self.labels=np.array(tmp_final_labels)
 
         dld_log=self.delete_labelless_data()
+
+        if remove_outliers:
+            #we just delete the columns. they will not recognize healthy. 
+            print("outliers are removed")
+            self.labels = np.delete(self.labels, [3, 5, 6, 7], axis=1)
 
         self.comment_function(
             function_name="one_hot_encodding()", 
@@ -415,3 +423,63 @@ class load_dataset():
     def get_signals_and_labels(self):
         self.signals = self.signals.transpose(0, 2, 1)
         return self.signals, self.labels
+
+
+
+
+def load_and_scale_dataset(remove_outliers=True):
+    if not "dataset" in os.listdir():
+        dataloader=load_dataset()
+        dataloader.load_dataset()
+        dataloader.denoise_signals()
+        dataloader.reduce_sample_rate()
+        dataloader.define_labels()
+        dataloader.define_8_superclasses()
+        dataloader.one_hot_encodding(remove_outliers=remove_outliers)
+        signals , labels = dataloader.get_signals_and_labels()
+        print("labels.shape: ", labels.shape)
+        input()
+
+        os.mkdir("dataset")
+        np.save("dataset/signals.npy", signals)
+        np.save("dataset/labels.npy",  labels)
+        print("restart the program...")
+        input()
+        return None
+
+    else:
+        signals=np.load("dataset/signals.npy")
+        labels=np.load("dataset/labels.npy")
+
+    x=signals
+    y=labels
+
+    x_tv, x_test, y_tv, y_test = train_test_split(x, y, test_size=0.15, random_state=42) # tv means train and validation
+    x_train, x_val, y_train, y_val = train_test_split(x_tv, y_tv, test_size=0.1765, random_state=42)
+    np.save("dataset/x_test.npy", x_test)
+    np.save("dataset/y_test.npy", y_test)
+
+    mean=x_train.mean(axis=(0,2), keepdims=True)
+    std = x_train.std(axis=(0,2), keepdims=True)
+
+    np.save("dataset/train_mean.npy", mean)
+    np.save("dataset/train_std.npy", std)
+
+    x_train = (x_train -mean) / (std + 1e-8)
+    x_val   = (x_val   -mean) / (std + 1e-8)
+
+    x_train = torch.tensor(x_train, dtype=torch.float)
+    x_val   = torch.tensor(x_val,   dtype=torch.float)
+
+    y_train = torch.tensor(y_train, dtype=torch.long)
+    y_val   = torch.tensor(y_val,   dtype=torch.long)
+
+    torch.save(x_train, "dataset/x_train.pt")
+    torch.save(x_val,   "dataset/x_val.pt")
+    torch.save(y_train, "dataset/y_train.pt")
+    torch.save(y_val,   "dataset/y_val.pt")
+
+
+
+    print("standard scalling is performed.")
+    print("dataset splittion is done. train, validation and test tensors are created.\n")

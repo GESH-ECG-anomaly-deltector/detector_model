@@ -3,30 +3,24 @@ import numpy as np
 import os
 import shutil
 import math
-print("numpy, os, shutil, and math are imported.\n")
-
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-print("train_test_split, and accuracy_score are imported.\n")
 
 import torch.nn as nn
 import torch
 import torch.optim as optim
-from torch.utils.data import TensorDataset, DataLoader, random_split
+from torch.utils.data import TensorDataset, DataLoader
 from torchmetrics.classification import (
     MultilabelF1Score, 
     MultilabelRecall,
     MultilabelAUROC,
     MultilabelAccuracy)
 from torch.utils.tensorboard import SummaryWriter
-print("torch, nn, optim, TensorDataset, DataLoader, radom_split, metrics, and SummaryWriter are imported.\n")
 
-from load_dataset import *
-from CNN_blocks import *
-from MSEL import *
-from Transformer_Encoder import *
-from TS_block import *
-print("my codes are imported.\n")
+from EDA.load_dataset import *
+from model_blocks.CNN_blocks import *
+from model_blocks.MSEL import *
+from model_blocks.Transformer_Encoder import *
+from model_blocks.TS_block import *
+print("modules and libraries are imported.\n")
 
 
 
@@ -35,76 +29,20 @@ device = "cpu"
 print("device:", device)
 
 
+load_and_scale_dataset(remove_outliers=True)
 
-
-if not "dataset" in os.listdir():
-    ldob=load_dataset()
-    ldob.load_dataset()
-    ldob.denoise_signals()
-    ldob.reduce_sample_rate()
-    ldob.define_labels()
-    ldob.define_8_superclasses()
-    ldob.one_hot_encodding()
-
-    signals, labels=ldob.get_signals_and_labels()
-
-    if "dataset" in os.listdir():
-        shutil.rmtree("dataset")
-    os.mkdir("dataset")
-    np.save("dataset/signals.npy", signals)
-    np.save("dataset/labels.npy",  labels)
-    print("restart the program...")
-    input()
-
-else:
-    signals=np.load("dataset/signals.npy")
-    labels=np.load("dataset/labels.npy")
-
-
-print("signals.shape:  ", signals.shape)
-print("labels.shape:   ", labels.shape)
-
-print("dataset is loaded.\n")
-
-
-
-
-x=signals
-y=labels
-
-x_tv, x_test, y_tv, y_test = train_test_split(x, y, test_size=0.15, random_state=42) # tv means train and validation
-x_train, x_val, y_train, y_val = train_test_split(x_tv, y_tv, test_size=0.1765, random_state=42)
-np.save("x_test.npy", x_test)
-np.save("y_test.npy", y_test)
-
-mean=x_train.mean(axis=(0,2), keepdims=True)
-std = x_train.std(axis=(0,2), keepdims=True)
-
-np.save("train_mean.npy", mean)
-np.save("train_std.npy", std)
-
-x_train = (x_train -mean) / (std + 1e-8)
-x_val   = (x_val   -mean) / (std + 1e-8)
-x_test  = (x_test  -mean) / (std + 1e-8)
-
-x_train = torch.tensor(x_train, dtype=torch.float)
-x_val   = torch.tensor(x_val,   dtype=torch.float)
-x_test  = torch.tensor(x_test,  dtype=torch.float)
-
-y_train = torch.tensor(y_train, dtype=torch.long)
-y_val   = torch.tensor(y_val,   dtype=torch.long)
-y_test  = torch.tensor(y_test,  dtype=torch.long)
+x_train=torch.load("EDA/dataset/x_train.pt")
+y_train=torch.load("EDA/dataset/y_train.pt")
+x_val=  torch.load("EDA/dataset/x_val.pt")
+y_val=  torch.load("EDA/dataset/y_val.pt")
 
 train_dataset = TensorDataset(x_train, y_train)
 val_dataset   = TensorDataset(x_val, y_val)
-test_dataset  = TensorDataset(x_test, y_test)
 
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 val_loader   = DataLoader(val_dataset,   batch_size=64, shuffle=False)
-test_loader  = DataLoader(test_dataset,  batch_size=64, shuffle=False)
 
-print("standard scalling is performed.")
-print("dataset splittion is done. train, validation and test DataLoaders are created.\n")
+print("train and validation DataLoaders are created.\n")
 
 
 
@@ -201,11 +139,13 @@ class Classifier(nn.Module):
         self.network=nn.Sequential(
             nn.Linear(512, 100),
             nn.ReLU(), 
+            nn.Dropout(0.3),
             
             nn.Linear(100, 80),
             nn.ReLU(),
+            nn.Dropout(0.3),
             
-            nn.Linear(80, 8)
+            nn.Linear(80, 4)
         )
 
         
@@ -274,7 +214,7 @@ print("costum_loss, optimizer and scheduler are implemented.\n")
 
 
 ## metrics
-num_labels=8
+num_labels=4
 f1_micro=MultilabelF1Score(num_labels=num_labels, average='micro', threshold=0.5)
 f1_macro=MultilabelF1Score(num_labels=num_labels, average='macro', threshold=0.5)
 f1_per_label=MultilabelF1Score(num_labels=num_labels, average=None, threshold=0.5)
@@ -427,3 +367,5 @@ writer.close()
 
 print("\n\n*** *** *** *** *** ***")
 print("end of training.\n")
+
+

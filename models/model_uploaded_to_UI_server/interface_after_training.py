@@ -3,29 +3,22 @@ import numpy as np
 import os
 import shutil
 import math
-print("numpy, os, shutil, and math are imported.\n")
-
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-print("train_test_split, and accuracy_score are imported.\n")
 
 import torch.nn as nn
 import torch
 import torch.optim as optim
-from torch.utils.data import TensorDataset, DataLoader, random_split
+from torch.utils.data import TensorDataset, DataLoader
 from torchmetrics.classification import (
     MultilabelF1Score, 
     MultilabelRecall,
     MultilabelAUROC,
     MultilabelAccuracy)
-from torch.utils.tensorboard import SummaryWriter
-print("torch, nn, optim, TensorDataset, DataLoader, radom_split, metrics, and SummaryWriter are imported.\n")
 
-from CNN_blocks import *
-from MSEL import *
-from Transformer_Encoder import *
-from TS_block import *
-print("my codes are imported.\n")
+from model_blocks.CNN_blocks import *
+from model_blocks.MSEL import *
+from model_blocks.Transformer_Encoder import *
+from model_blocks.TS_block import *
+print("packages and libraries are imported.\n")
 
 
 
@@ -37,12 +30,12 @@ print("device:", device)
 
 
 ## load data:
-x_test=np.load("x_test.npy")
-y_test=np.load("y_test.npy")
+x_test=np.load("dataset/x_test.npy")
+y_test=np.load("dataset/y_test.npy")
 
 
-mean=np.load("train_mean.npy")
-std= np.load("train_std.npy")
+mean=np.load("dataset/train_mean.npy")
+std= np.load("dataset/train_std.npy")
 
 x_test  = (x_test  -mean) / (std + 1e-8)
 x_test  = torch.tensor(x_test,  dtype=torch.float)
@@ -78,7 +71,7 @@ class Classifier(nn.Module):
             nn.ReLU(),
             nn.Dropout(0.3),
             
-            nn.Linear(80, 8)
+            nn.Linear(80, 4)
         )
 
         
@@ -95,8 +88,9 @@ class Classifier(nn.Module):
         lower_cls1, lower_cls2 =  self.lower_TS_block(lower_MSEL_out)
         
         net_in    =  torch.cat([lower_cls2, upper_cls2], dim=1)
+        classification_output  =  torch.sigmoid( self.network(net_in) )
         
-        return self.network( net_in ), [upper_cls1, lower_cls1, upper_cls2, lower_cls2]
+        return classification_output, [upper_cls1, lower_cls1, upper_cls2, lower_cls2]
 
 
 print("classifier() is defined.\n")
@@ -112,7 +106,7 @@ print("model is gone to device.\n")
 
 
 ## metrics
-num_labels=8
+num_labels=4
 f1_micro=MultilabelF1Score(num_labels=num_labels, average='micro', threshold=0.5)
 f1_macro=MultilabelF1Score(num_labels=num_labels, average='macro', threshold=0.5)
 f1_per_label=MultilabelF1Score(num_labels=num_labels, average=None, threshold=0.5)
