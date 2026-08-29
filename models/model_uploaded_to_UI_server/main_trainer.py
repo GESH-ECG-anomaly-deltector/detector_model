@@ -31,10 +31,10 @@ print("device:", device)
 
 load_and_scale_dataset(remove_outliers=True)
 
-x_train=torch.load("EDA/dataset/x_train.pt")
-y_train=torch.load("EDA/dataset/y_train.pt")
-x_val=  torch.load("EDA/dataset/x_val.pt")
-y_val=  torch.load("EDA/dataset/y_val.pt")
+x_train=torch.load("dataset/x_train.pt")
+y_train=torch.load("dataset/y_train.pt")
+x_val=  torch.load("dataset/x_val.pt")
+y_val=  torch.load("dataset/y_val.pt")
 
 train_dataset = TensorDataset(x_train, y_train)
 val_dataset   = TensorDataset(x_val, y_val)
