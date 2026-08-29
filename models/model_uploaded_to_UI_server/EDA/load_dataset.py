@@ -438,7 +438,6 @@ def load_and_scale_dataset(remove_outliers=True):
         dataloader.one_hot_encodding(remove_outliers=remove_outliers)
         signals , labels = dataloader.get_signals_and_labels()
         print("labels.shape: ", labels.shape)
-        input()
 
         os.mkdir("dataset")
         np.save("dataset/signals.npy", signals)
