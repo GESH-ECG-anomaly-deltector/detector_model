@@ -28,8 +28,10 @@ print("modules and libraries are imported.\n")
 device = "cpu"
 print("device:", device)
 
-
-load_and_scale_dataset(remove_outliers=True)
+print("If the dataset is not loaded yet, run load_and_scale_dataset twice.")
+tmp=int(input("run load_and_scale_dataset:  1-yes  0-no  "))
+if tmp:
+    load_and_scale_dataset()
 
 x_train=torch.load("dataset/x_train.pt")
 y_train=torch.load("dataset/y_train.pt")
@@ -145,7 +147,7 @@ class Classifier(nn.Module):
             nn.ReLU(),
             nn.Dropout(0.3),
             
-            nn.Linear(80, 4)
+            nn.Linear(80, 8)
         )
 
         
@@ -162,16 +164,15 @@ class Classifier(nn.Module):
         lower_cls1, lower_cls2 =  self.lower_TS_block(lower_MSEL_out)
         
         net_in    =  torch.cat([lower_cls2, upper_cls2], dim=1)
-        classification_output  =  torch.sigmoid( self.network(net_in) )
-        
-        return classification_output, [upper_cls1, lower_cls1, upper_cls2, lower_cls2]
+
+        return self.network(net_in)  , [upper_cls1, lower_cls1, upper_cls2, lower_cls2]
 
 
 print("classifier() is defined.\n")
 
 
 
-device="cuda"
+#device="cuda"
 print("device: ", device)
 model=Classifier().to(device)
 
@@ -186,8 +187,8 @@ def r2_loss(y_pred, y_true, eps=1e-8):
 def custom_loss(output, y_batch, cls1_u, cls1_l, cls2_u, cls2_l):
     alpha = 0.2  #defined by the paper
 
-    bce_loss=nn.BCEWithLogitsLoss() # this function will apply sigmoid() itself, se we use torch.logit()  to make inverse of sigmoid.
-    first_loss=bce_loss(torch.logit(output), y_batch.float())
+    bce_loss=nn.BCEWithLogitsLoss() # this function will apply sigmoid() itself
+    first_loss=bce_loss(output, y_batch.float())
     second_loss=( r2_loss(cls2_u, cls2_l) / r2_loss(cls1_u, cls1_l) )
     total_loss = first_loss + (alpha*second_loss)
     
@@ -214,7 +215,7 @@ print("costum_loss, optimizer and scheduler are implemented.\n")
 
 
 ## metrics
-num_labels=4
+num_labels=8
 f1_micro=MultilabelF1Score(num_labels=num_labels, average='micro', threshold=0.5)
 f1_macro=MultilabelF1Score(num_labels=num_labels, average='macro', threshold=0.5)
 f1_per_label=MultilabelF1Score(num_labels=num_labels, average=None, threshold=0.5)
@@ -243,7 +244,8 @@ acc_macro = acc_macro.to(device)
 
 
 
-epochs=200
+#epochs=200
+epochs=2
 if(os.path.exists("training_logs")):
     shutil.rmtree("training_logs")     
 writer=SummaryWriter(log_dir="training_logs")

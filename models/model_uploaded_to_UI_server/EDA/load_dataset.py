@@ -353,7 +353,7 @@ class load_dataset():
 
 
 
-    def one_hot_encodding(self, remove_outliers=False): 
+    def one_hot_encodding(self): 
         tmp_final_labels=[]
  
         for label in self.labels:
@@ -381,11 +381,6 @@ class load_dataset():
         self.labels=np.array(tmp_final_labels)
 
         dld_log=self.delete_labelless_data()
-
-        if remove_outliers:
-            #we just delete the columns. they will not recognize healthy. 
-            print("outliers are removed")
-            self.labels = np.delete(self.labels, [3, 5, 6, 7], axis=1)
 
         self.comment_function(
             function_name="one_hot_encodding()", 
@@ -427,15 +422,23 @@ class load_dataset():
 
 
 
-def load_and_scale_dataset(remove_outliers=True):
+def load_and_scale_dataset():
     if not "dataset" in os.listdir():
+        print("before object:\n")
         dataloader=load_dataset()
+        print("before loading:\n")
         dataloader.load_dataset()
+        print("before denoising:\n")
         dataloader.denoise_signals()
+        print("before smple_rate reduction:\n")
         dataloader.reduce_sample_rate()
+        print("before label definition:\n")
         dataloader.define_labels()
+        print("before uperclass definition:\n")
         dataloader.define_8_superclasses()
-        dataloader.one_hot_encodding(remove_outliers=remove_outliers)
+        print("before one-hot encodding:\n")
+        dataloader.one_hot_encodding()
+        print("before returning signals and labels:\n")
         signals , labels = dataloader.get_signals_and_labels()
         print("labels.shape: ", labels.shape)
 

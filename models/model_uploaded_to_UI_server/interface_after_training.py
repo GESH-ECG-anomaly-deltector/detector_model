@@ -71,7 +71,7 @@ class Classifier(nn.Module):
             nn.ReLU(),
             nn.Dropout(0.3),
             
-            nn.Linear(80, 4)
+            nn.Linear(80, 8)
         )
 
         
@@ -88,10 +88,11 @@ class Classifier(nn.Module):
         lower_cls1, lower_cls2 =  self.lower_TS_block(lower_MSEL_out)
         
         net_in    =  torch.cat([lower_cls2, upper_cls2], dim=1)
-        classification_output  =  torch.sigmoid( self.network(net_in) )
+       # classification_output  =  torch.sigmoid( self.network(net_in) )
         
-        return classification_output, [upper_cls1, lower_cls1, upper_cls2, lower_cls2]
-
+       # return classification_output, [upper_cls1, lower_cls1, upper_cls2, lower_cls2]
+        return self.network(net_in)  , [upper_cls1, lower_cls1, upper_cls2, lower_cls2]
+        
 
 print("classifier() is defined.\n")
 
@@ -106,7 +107,7 @@ print("model is gone to device.\n")
 
 
 ## metrics
-num_labels=4
+num_labels=8
 f1_micro=MultilabelF1Score(num_labels=num_labels, average='micro', threshold=0.5)
 f1_macro=MultilabelF1Score(num_labels=num_labels, average='macro', threshold=0.5)
 f1_per_label=MultilabelF1Score(num_labels=num_labels, average=None, threshold=0.5)
@@ -150,15 +151,15 @@ print("Best checkpoint loaded.")
 print("Best checkpoint epoch:", checkpoint["epoch"])
 print("Best validation loss:", checkpoint["custom_paper's_loss"], "\n")
 
-
 outputs=[]
 with torch.no_grad():
     for x, y in test_loader:
         outputs.append(model(x.to(device))[0])
-output=(torch.cat(outputs), None)
+#output=(torch.cat(outputs), None)
+output= (torch.cat(outputs), None)
 
 
-y_test_pred=output[0]
+y_test_pred=torch.sigmoid(output[0])
 #print(y_test_pred)
 print("f1_micro:        \t", f1_micro(y_test_pred, y_test))
 print("f1_per_label:    \t", f1_per_label(y_test_pred, y_test))
@@ -173,3 +174,21 @@ print("auroc_per_label: \t", auroc_per_label(y_test_pred, y_test), "\n")
 print("acc_per_label:   \t", acc_per_label(y_test_pred, y_test))
 print("acc_micro:       \t", acc_micro(y_test_pred, y_test))
 print("acc_macro:       \t", acc_macro(y_test_pred, y_test), "\n")
+
+TP= ((y_test_pred>0.5) & (y_test==1)).sum(dim=0)
+FP= ((y_test_pred>0.5) & (y_test==0)).sum(dim=0)
+TN= ((y_test_pred<0.5) & (y_test==0)).sum(dim=0)
+FN= ((y_test_pred<0.5) & (y_test==1)).sum(dim=0)
+print("\n\n")
+print("TP:\t\t",   TP[0], "\t", TP[1], "\t", TP[2], "\t", TP[3], 
+                   TP[4], "\t", TP[5], "\t", TP[6], "\t", TP[7] )
+
+print("FP:\t\t",   FP[0], "\t", FP[1], "\t", FP[2], "\t", FP[3],
+                   FP[4], "\t", FP[5], "\t", FP[6], "\t", FP[7] )
+
+print("TN:\t\t",   TN[0], "\t", TN[1], "\t", TN[2], "\t", TN[3],
+                   TN[4], "\t", TN[5], "\t", TN[6], "\t", TN[7] )
+
+print("FN:\t\t",   FN[0], "\t", FN[1], "\t", FN[2], "\t", FN[3],
+                   FN[4], "\t", FN[5], "\t", FN[6], "\t", FN[7] )
+
