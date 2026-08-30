@@ -1,0 +1,36 @@
+packages and libraries are imported.
+
+device: cpu
+classifier() is defined.
+
+model is gone to device.
+
+
+
+*** *** *** *** *** ***
+test evaluation:
+Best checkpoint loaded.
+Best checkpoint epoch: 3
+Best validation loss: 0.18400934806173222 
+
+f1_micro:        	 tensor(0.7927)
+f1_per_label:    	 tensor([0.8731, 0.9422, 0.3688, 0.0000, 0.9437, 0.0000, 0.0000, 0.0000])
+f1_macro:        	 tensor(0.3910) 
+
+recall_micro:    	 tensor(0.7077)
+recall_macro:    	 tensor(0.3696)
+recall_per_label:	 tensor([0.7970, 0.9223, 0.2855, 0.0000, 0.9522, 0.0000, 0.0000, 0.0000]) 
+
+auroc_per_label: 	 tensor([0.9771, 0.9804, 0.7673, 0.8644, 0.9843, 0.7922, 0.7113, 0.5596]) 
+
+acc_per_label:   	 tensor([0.9577, 0.9550, 0.7679, 0.9890, 0.9472, 0.9494, 0.9005, 0.9983])
+acc_micro:       	 tensor(0.9331)
+acc_macro:       	 tensor(0.9331) 
+
+
+
+
+TP:		 tensor(970) 	 tensor(2445) 	 tensor(452) 	 tensor(0) tensor(2950) 	 tensor(0) 	 tensor(0) 	 tensor(0)
+FP:		 tensor(35) 	 tensor(94) 	 tensor(416) 	 tensor(0) tensor(204) 	 tensor(0) 	 tensor(0) 	 tensor(0)
+TN:		 tensor(5412) 	 tensor(3919) 	 tensor(4665) 	 tensor(6591) tensor(3362) 	 tensor(6327) 	 tensor(6001) 	 tensor(6653)
+FN:		 tensor(247) 	 tensor(206) 	 tensor(1131) 	 tensor(73) tensor(148) 	 tensor(337) 	 tensor(663) 	 tensor(11)
