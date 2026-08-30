@@ -1,0 +1,6 @@
+denoise_signal()
+  All instances are denoised by Neurokit2.
+	hint:
+		 signals_shape=(batch_number, time_steps, features) as bellow: :
+			 -> (45100, 5000, 12)
+----------------------------------------------------------------

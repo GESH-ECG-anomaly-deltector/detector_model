@@ -1,0 +1,90 @@
+packages and libraries are imported.
+
+device: cpu
+classifier() is defined.
+
+model is gone to device.
+
+
+
+
+======================================================================
+Layer (type:depth-idx)                        Param #
+======================================================================
+Classifier                                    --
+├─CNN_blocks1: 1-1                            --
+│    └─ModuleList: 2-1                        --
+│    │    └─conv_block: 3-1                   10,880
+│    │    └─conv_block: 3-2                   164,096
+│    │    └─conv_block: 3-3                   98,432
+│    │    └─conv_block: 3-4                   4,128
+│    │    └─conv_block: 3-5                   4,128
+│    │    └─conv_block: 3-6                   39,968
+│    │    └─conv_block: 3-7                   19,488
+│    │    └─conv_block: 3-8                   9,248
+│    │    └─conv_block: 3-9                   16,512
+│    └─max_pool: 2-2                          --
+│    │    └─MaxPool1d: 3-10                   --
+│    └─batch_norm: 2-3                        --
+│    │    └─Sequential: 3-11                  256
+│    └─batch_norm: 2-4                        --
+│    │    └─Sequential: 3-12                  256
+│    └─relu_block: 2-5                        --
+│    │    └─ReLU: 3-13                        --
+├─CNN_blocks2: 1-2                            --
+│    └─ModuleList: 2-6                        --
+│    │    └─conv_block: 3-14                  114,816
+│    │    └─conv_block: 3-15                  164,096
+│    │    └─conv_block: 3-16                  98,432
+│    │    └─conv_block: 3-17                  4,128
+│    │    └─conv_block: 3-18                  4,128
+│    │    └─conv_block: 3-19                  39,968
+│    │    └─conv_block: 3-20                  19,488
+│    │    └─conv_block: 3-21                  9,248
+│    │    └─conv_block: 3-22                  16,512
+│    └─max_pool: 2-7                          --
+│    │    └─MaxPool1d: 3-23                   --
+│    └─batch_norm: 2-8                        --
+│    │    └─Sequential: 3-24                  256
+│    └─batch_norm: 2-9                        --
+│    │    └─Sequential: 3-25                  256
+│    └─relu_block: 2-10                       --
+│    │    └─ReLU: 3-26                        --
+├─lower_MSEL: 1-3                             46,848
+│    └─Conv1d: 2-11                           82,048
+│    └─Conv1d: 2-12                           1,638,528
+│    └─LayerNorm: 2-13                        512
+├─lower_TS_block: 1-4                         --
+│    └─ModuleList: 2-14                       --
+│    │    └─teb: 3-27                         789,760
+│    │    └─teb: 3-28                         789,760
+│    │    └─teb: 3-29                         789,760
+│    │    └─teb: 3-30                         789,760
+│    │    └─teb: 3-31                         789,760
+├─upper_MSEL: 1-5                             13,056
+│    └─Conv1d: 2-15                           327,808
+│    └─Conv1d: 2-16                           655,488
+│    └─LayerNorm: 2-17                        512
+├─upper_TS_block: 1-6                         --
+│    └─ModuleList: 2-18                       --
+│    │    └─teb: 3-32                         789,760
+│    │    └─teb: 3-33                         789,760
+│    │    └─teb: 3-34                         789,760
+│    │    └─teb: 3-35                         789,760
+│    │    └─teb: 3-36                         789,760
+│    │    └─teb: 3-37                         789,760
+│    │    └─teb: 3-38                         789,760
+│    │    └─teb: 3-39                         789,760
+├─Sequential: 1-7                             --
+│    └─Linear: 2-19                           51,300
+│    └─ReLU: 2-20                             --
+│    └─Dropout: 2-21                          --
+│    └─Linear: 2-22                           8,080
+│    └─ReLU: 2-23                             --
+│    └─Dropout: 2-24                          --
+│    └─Linear: 2-25                           324
+======================================================================
+Total params: 13,930,104
+Trainable params: 13,930,104
+Non-trainable params: 0
+======================================================================
