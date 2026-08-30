@@ -1,3 +1,0 @@
-define_labels()
-  The labels of the instances are extracted from self.record_array.
-----------------------------------------------------------------
