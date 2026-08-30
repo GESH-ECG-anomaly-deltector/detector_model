@@ -5,3 +5,4 @@
 /models/model_1/final_model/logs/
 /models/model_1/final_model/checkpoint_manager/
 /models/model_1/final_model/checkpoint_manager/
+/models/model_3/model_without_outlier_labels_from_server/checkpoint_manager/
